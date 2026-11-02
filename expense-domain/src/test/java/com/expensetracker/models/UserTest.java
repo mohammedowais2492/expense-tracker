@@ -2,6 +2,7 @@
 package com.expensetracker.models;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -165,5 +166,69 @@ class UserTest {
     @ValueSource(longs = { 0L, -1L })
     void reconstituteThrowsIllegalArgumentExceptionWhenIdIsNonPositive(long id) {
         assertThrows(IllegalArgumentException.class, () -> User.reconstitute(id, FIRST_NAME, LAST_NAME));
+    }
+
+    @Test
+    void renameIsSuccessful() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        User renamed = original.rename("newFirstName", "newLastName");
+
+        assertNotSame(original, renamed);
+        assertEquals(1L, renamed.getId());
+        assertEquals("newFirstName", renamed.getFirstName());
+        assertEquals("newLastName", renamed.getLastName());
+
+        // Original remains unchanged
+        assertEquals("firstName", original.getFirstName());
+        assertEquals("lastName", original.getLastName());
+    }
+
+    @Test
+    void renameIsSuccessfulWhenLastNameIsNull() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        User renamed = original.rename("newFirstName", null);
+
+        assertEquals("newFirstName", renamed.getFirstName());
+        assertNull(renamed.getLastName());
+    }
+
+    @Test
+    void renameTrimsSurroundingWhitespaceFromNames() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        User renamed = original.rename("  newFirstName  ", "  newLastName  ");
+
+        assertEquals("newFirstName", renamed.getFirstName());
+        assertEquals("newLastName", renamed.getLastName());
+    }
+
+    @Test
+    void renameThrowsNullPointerExceptionWhenFirstNameIsNull() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        assertThrows(
+                NullPointerException.class,
+                () -> original.rename(null, "newLastName"));
+    }
+
+    @Test
+    void renameThrowsIllegalArgumentExceptionWhenFirstNameIsBlank() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> original.rename("   ", "newLastName"));
+    }
+
+    @Test
+    void renameNormalizesBlankLastNameToNull() {
+        User original = User.reconstitute(1L, "firstName", "lastName");
+
+        User renamed = original.rename("newFirstName", "   ");
+
+        assertEquals("newFirstName", renamed.getFirstName());
+        assertNull(renamed.getLastName());
     }
 }

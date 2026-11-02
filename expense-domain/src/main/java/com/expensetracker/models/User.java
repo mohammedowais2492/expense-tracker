@@ -79,4 +79,22 @@ public class User {
     public static User reconstitute(long id, @NonNull String firstName, String lastName) {
         return new User(id, firstName, lastName);
     }
+
+    /**
+     * Returns a new user with the specified first and last names.
+     *
+     * <p>
+     * The original user remains unchanged. The existing user identifier
+     * is preserved, and the supplied names are subject to the same validation
+     * and normalization rules as user creation.
+     *
+     * @param newFirstName the new first name; must not be null or blank
+     * @param newLastName  the new last name; may be null or blank
+     * @return a new user with the updated names
+     * @throws NullPointerException     if newFirstName is null
+     * @throws IllegalArgumentException if newFirstName is blank
+     */
+    public User rename(@NonNull String newFirstName, String newLastName) {
+        return new User(this.id, newFirstName, newLastName);
+    }
 }
