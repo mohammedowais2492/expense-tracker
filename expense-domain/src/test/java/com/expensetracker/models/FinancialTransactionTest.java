@@ -12,7 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** Unit tests for {@link FinancialTransaction.java} */
+/** Unit tests for {@link FinancialTransaction} */
 class FinancialTransactionTest {
 
     private static final long PROFILE_ID = 1L;
