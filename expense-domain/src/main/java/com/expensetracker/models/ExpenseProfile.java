@@ -68,4 +68,21 @@ public class ExpenseProfile {
     public static ExpenseProfile reconstitute(long id, long userId, @NonNull String profileName) {
         return new ExpenseProfile(id, userId, profileName);
     }
+
+    /**
+     * Creates a new expense profile with an updated name.
+     *
+     * <p>
+     * The returned profile preserves the current profile's ID and associated
+     * user ID. The original instance remains unchanged.
+     * </p>
+     *
+     * @param newProfileName the new name for the expense profile
+     * @return a new expense profile with the updated name
+     * @throws NullPointerException     if {@code newProfileName} is null
+     * @throws IllegalArgumentException if {@code newProfileName} is blank
+     */
+    public ExpenseProfile rename(@NonNull String newProfileName) {
+        return new ExpenseProfile(this.id, this.userId, newProfileName);
+    }
 }
