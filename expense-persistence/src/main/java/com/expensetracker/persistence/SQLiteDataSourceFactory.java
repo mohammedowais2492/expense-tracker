@@ -75,6 +75,7 @@ public final class SQLiteDataSourceFactory {
 
         SQLiteDataSource dataSource = new SQLiteDataSource();
         dataSource.setUrl("jdbc:sqlite:" + normalizedPath);
+        dataSource.setEnforceForeignKeys(true);
 
         return dataSource;
     }
