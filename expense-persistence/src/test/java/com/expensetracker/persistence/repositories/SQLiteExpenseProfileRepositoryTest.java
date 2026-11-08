@@ -1,4 +1,3 @@
-
 package com.expensetracker.persistence.repositories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
