@@ -21,7 +21,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Integration tests for {@link DatabaseMigrationManager} */
+/** Unit tests for {@link DatabaseMigrationManager} */
 class DatabaseMigrationManagerTest {
 
     private static final Set<String> EXPECTED_TABLES = Set.of(
