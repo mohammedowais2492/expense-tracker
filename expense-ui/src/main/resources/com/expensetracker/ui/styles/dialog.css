@@ -1,0 +1,30 @@
+/* Dialog container */
+.dialog-pane {
+    -fx-background-color: -app-surface;
+}
+
+/* Dialog form */
+.dialog-form {
+    -fx-background-color: -app-surface;
+    -fx-padding: 24px;
+}
+
+/* Form labels */
+.form-label {
+    -fx-text-fill: -app-text;
+    -fx-font-weight: bold;
+}
+
+/* Dialog header */
+.dialog-pane .header-panel {
+    -fx-background-color: -app-surface;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: -app-text;
+}
+
+/* Dialog buttons area */
+.dialog-pane .button-bar {
+    -fx-background-color: -app-surface;
+}

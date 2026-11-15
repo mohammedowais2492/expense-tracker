@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.expensetracker.ui.screens.landing.LandingController"  
+      alignment="CENTER"
+      spacing="24"
+      styleClass="root">
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <Label text="Expense Tracker" styleClass="page-title"/>
+
+    <VBox alignment="CENTER"
+          spacing="16"
+          maxWidth="400"
+          styleClass="card">
+
+        <Label text="Welcome back" styleClass="card-title"/>
+
+        <Label text="Choose a user to continue" styleClass="secondary-text"/>
+
+        <ComboBox fx:id="userComboBox"
+          promptText="Select a user"
+          prefWidth="300"/>
+
+        <Button text="Continue"
+          fx:id="continueButton"
+          prefWidth="300"
+          onAction="#handleContinue"/>
+
+        <Button text="Create User"
+          fx:id="createButton"
+          prefWidth="300"
+          onAction="#handleCreateUser"/>
+
+        <Label fx:id="statusLabel" styleClass="status-label"/>
+
+    </VBox>
+
+</VBox>

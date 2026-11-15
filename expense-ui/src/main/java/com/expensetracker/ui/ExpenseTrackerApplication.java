@@ -1,15 +1,20 @@
 package com.expensetracker.ui;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Objects;
+
+import com.expensetracker.ui.alerts.AlertService;
+import com.expensetracker.ui.alerts.JavaFxAlertService;
+import com.expensetracker.ui.bootstrap.ApplicationBootstrap;
+import com.expensetracker.ui.bootstrap.ApplicationContext;
+import com.expensetracker.ui.context.UserContext;
+import com.expensetracker.ui.navigation.ControllerFactory;
+
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
@@ -21,50 +26,37 @@ import javafx.stage.Stage;
  */
 public final class ExpenseTrackerApplication extends Application {
     @Override
-    public void start(Stage primaryStage) {
-        Label heading = new Label("ExpenseTracker");
+    public void start(Stage primaryStage) throws IOException {
+        Path databasePath = Path.of(
+                System.getProperty("user.home"),
+                "expense-tracker.db");
 
-        TextField nameField = new TextField();
-        nameField.setPromptText("Enter your name");
+        ApplicationContext applicationContext = ApplicationBootstrap.initialize(databasePath);
 
-        Button greetButton = new Button("Greetings");
+        UserContext userContext = new UserContext();
 
-        Label resultLabel = new Label();
+        AlertService alertService = new JavaFxAlertService(primaryStage);
 
-        greetButton.setOnAction(event -> {
-            String name = nameField.getText();
-            if (name.isBlank()) {
-                resultLabel.setText("Please enter your name.");
-            } else {
-                resultLabel.setText("Hello, " + name.strip() + "!");
-            }
-        });
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource(
+                        "/com/expensetracker/ui/screens/landing.fxml"));
 
-        Label statusLabel = new Label("Ready");
+        loader.setControllerFactory(new ControllerFactory(applicationContext, userContext, alertService));
 
-        VBox form = new VBox(15, nameField, greetButton, resultLabel);
-        form.setAlignment(Pos.CENTER);
+        Parent root = loader.load();
 
-        BorderPane root = new BorderPane();
-        root.setTop(heading);
-        root.setCenter(form);
-        root.setBottom(statusLabel);
+        Scene scene = new Scene(root, 1000, 650);
 
-        BorderPane.setMargin(heading, new Insets(20));
-        BorderPane.setAlignment(heading, Pos.CENTER);
-        BorderPane.setMargin(statusLabel, new Insets(10));
-        BorderPane.setAlignment(statusLabel, Pos.BOTTOM_LEFT);
+        scene.getStylesheets().add(
+                Objects.requireNonNull(
+                        getClass().getResource(
+                                "/com/expensetracker/ui/styles/application.css"))
+                        .toExternalForm());
 
-        // root.getChildren().addAll(
-        // heading,
-        // nameField,
-        // greetButton,
-        // resultLabel);
-
-        Scene scene = new Scene(root, 800, 500);
-
-        primaryStage.setTitle("ExpenseTracker");
+        primaryStage.setTitle("Expense Tracker");
         primaryStage.setScene(scene);
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(550);
         primaryStage.show();
     }
 

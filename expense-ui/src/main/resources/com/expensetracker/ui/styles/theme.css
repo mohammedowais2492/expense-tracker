@@ -1,0 +1,19 @@
+/*
+ * Shared application theme.
+ *
+ * Defines the color palette and default typography
+ * used throughout the Expense Tracker UI.
+ */
+
+.root {
+    -app-background: #242830;
+    -app-surface: #343A45;
+    -app-accent: #7193E6;
+    -app-text: #F1F5F9;
+    -app-muted: #AAB4C3;
+    -app-border: #525B6B;
+
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-background-color: -app-background;
+}

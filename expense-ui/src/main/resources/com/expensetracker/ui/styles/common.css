@@ -1,0 +1,97 @@
+/* Reusable card container */
+.card {
+    -fx-background-color: -app-surface;
+    -fx-background-radius: 14px;
+    -fx-padding: 32px;
+}
+
+/* Typography */
+.page-title {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+.card-title {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.secondary-text {
+    -fx-text-fill: -app-muted;
+}
+
+/* Text input */
+.text-field {
+    -fx-background-color: -app-background;
+    -fx-text-fill: -app-text;
+    -fx-prompt-text-fill: #8793A5;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-padding: 10px;
+}
+
+.text-field:focused {
+    -fx-border-color: -app-accent;
+}
+
+/* Primary action buttons */
+.button {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: #101827;
+    -fx-font-weight: bold;
+    -fx-background-radius: 7px;
+    -fx-padding: 10px 16px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #8BA7ED;
+}
+
+.button:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* Secondary actions */
+.secondary-button {
+    -fx-background-color: -app-surface;
+    -fx-text-fill: -app-text;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 7px;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: -app-background;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: -app-text;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -app-surface;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: -app-surface;
+    -fx-text-fill: -app-text;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: #101827;
+}
+
+/* Informational status messages */
+.status-label {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 13px;
+}
