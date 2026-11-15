@@ -10,6 +10,7 @@ import com.expensetracker.ui.bootstrap.ApplicationBootstrap;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.navigation.ControllerFactory;
+import com.expensetracker.ui.profile.ProfileService;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -37,11 +38,14 @@ public final class ExpenseTrackerApplication extends Application {
 
         AlertService alertService = new JavaFxAlertService(primaryStage);
 
+        ProfileService profileService = new ProfileService(applicationContext.getExpenseProfileService(), userContext);
+
         FXMLLoader loader = new FXMLLoader(
                 getClass().getResource(
                         "/com/expensetracker/ui/screens/landing.fxml"));
 
-        loader.setControllerFactory(new ControllerFactory(applicationContext, userContext, alertService));
+        loader.setControllerFactory(
+                new ControllerFactory(applicationContext, userContext, alertService, profileService));
 
         Parent root = loader.load();
 

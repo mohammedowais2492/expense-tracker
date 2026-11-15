@@ -5,10 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ import com.expensetracker.models.User;
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.context.UserContext;
+import com.expensetracker.ui.profile.ProfileService;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -40,13 +42,18 @@ import javafx.stage.Stage;
 
 /**
  * Tests the landing screen's initialization, user selection,
- * and interactions with application services.
+ * user creation, and profile initialization workflow.
+ *
+ * <p>
+ * Application services are mocked to isolate the controller's
+ * behavior from persistence and profile resolution.
  */
 @ExtendWith(ApplicationExtension.class)
 class LandingControllerTest {
 
     private final UserService userService = mock(UserService.class);
     private final AlertService alertService = mock(AlertService.class);
+    private final ProfileService profileService = mock(ProfileService.class);
     private final UserContext userContext = new UserContext();
 
     private Stage stage;
@@ -77,7 +84,8 @@ class LandingControllerTest {
                     return new LandingController(
                             userService,
                             userContext,
-                            alertService);
+                            alertService,
+                            profileService);
                 }
 
                 throw new IllegalArgumentException(
@@ -89,7 +97,8 @@ class LandingControllerTest {
                 stage.setScene(new Scene(root, 1000, 650));
             } catch (IOException exception) {
                 throw new IllegalStateException(
-                        "Unable to load landing screen", exception);
+                        "Unable to load landing screen",
+                        exception);
             }
 
             return null;
@@ -123,9 +132,11 @@ class LandingControllerTest {
         ComboBox<?> comboBox = robot.lookup("#userComboBox")
                 .queryAs(ComboBox.class);
 
-        assertEquals(2, comboBox.getItems().size());
-        assertEquals(firstUser, comboBox.getItems().get(0));
-        assertEquals(secondUser, comboBox.getItems().get(1));
+        robot.interact(() -> {
+            assertEquals(2, comboBox.getItems().size());
+            assertEquals(firstUser, comboBox.getItems().get(0));
+            assertEquals(secondUser, comboBox.getItems().get(1));
+        });
     }
 
     @Test
@@ -139,7 +150,7 @@ class LandingControllerTest {
         Button continueButton = robot.lookup("#continueButton")
                 .queryAs(Button.class);
 
-        assertTrue(continueButton.isDisabled());
+        robot.interact(() -> assertTrue(continueButton.isDisabled()));
     }
 
     @Test
@@ -150,20 +161,22 @@ class LandingControllerTest {
 
         loadLanding(List.of(user));
 
-        @SuppressWarnings("unchecked")
-        ComboBox<User> comboBox = robot.lookup("#userComboBox")
+        ComboBox<?> comboBox = robot.lookup("#userComboBox")
                 .queryAs(ComboBox.class);
 
         Button continueButton = robot.lookup("#continueButton")
                 .queryAs(Button.class);
 
-        robot.interact(() -> comboBox.getSelectionModel().select(user));
-
-        assertFalse(continueButton.isDisabled());
+        robot.interact(() -> {
+            comboBox.getSelectionModel().select(0);
+            assertFalse(continueButton.isDisabled());
+        });
     }
 
     @Test
-    void selectsUserInContextWhenContinueIsClicked(FxRobot robot) {
+    void selectsUserAndInitializesProfileWhenContinueIsClicked(
+            FxRobot robot) {
+
         User user = User.reconstitute(
                 1L,
                 "firstName",
@@ -182,6 +195,53 @@ class LandingControllerTest {
         robot.clickOn(continueButton);
 
         assertEquals(1L, userContext.getCurrentUserId());
+
+        verify(profileService).selectDefaultProfile();
+
+        verifyNoInteractions(alertService);
+    }
+
+    @Test
+    void doesNotInitializeProfileWhenNoUserIsSelected(FxRobot robot) {
+        loadLanding(List.of());
+
+        Button continueButton = robot.lookup("#continueButton")
+                .queryAs(Button.class);
+
+        robot.interact(() -> assertTrue(continueButton.isDisabled()));
+
+        verifyNoInteractions(profileService);
+    }
+
+    @Test
+    void displaysErrorWhenProfileInitializationFails(FxRobot robot) {
+        User user = User.reconstitute(
+                1L,
+                "firstName",
+                "lastName");
+
+        loadLanding(List.of(user));
+
+        doThrow(new IllegalStateException("Database unavailable"))
+                .when(profileService)
+                .selectDefaultProfile();
+
+        ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                .queryAs(ComboBox.class);
+
+        Button continueButton = robot.lookup("#continueButton")
+                .queryAs(Button.class);
+
+        robot.interact(() -> comboBox.getSelectionModel().select(0));
+
+        robot.clickOn(continueButton);
+
+        verify(profileService).selectDefaultProfile();
+
+        verify(alertService).showError(
+                "Profile Selection Failed",
+                "Unable to initialize expense profile",
+                "An unexpected error occurred while loading your profile.");
     }
 
     @Test
@@ -192,27 +252,20 @@ class LandingControllerTest {
         when(persistedUser.getFirstName()).thenReturn("firstName");
         when(persistedUser.getLastName()).thenReturn("lastName");
 
-        when(userService.getAllUsers())
-                .thenReturn(List.of())
-                .thenReturn(List.of(persistedUser));
-
         when(userService.addUser(any(User.class)))
                 .thenReturn(persistedUser);
 
-        // Initializes the screen with no users.
         loadLanding(List.of());
 
-        // Configures the subsequent refresh.
+        // Configure the next retrieval, after the screen is initialized.
         when(userService.getAllUsers())
                 .thenReturn(List.of(persistedUser));
 
-        // Open the Create User dialog from the landing screen.
         robot.clickOn("Create User");
 
         robot.clickOn("#firstNameField").write("firstName");
         robot.clickOn("#lastNameField").write("lastName");
 
-        // Retrieve the dialog's Create User button.
         DialogPane dialogPane = robot.lookup(".dialog-pane")
                 .queryAs(DialogPane.class);
 
@@ -225,7 +278,6 @@ class LandingControllerTest {
 
         robot.clickOn(createButton);
 
-        // Verify that the service received the entered information.
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         verify(userService).addUser(userCaptor.capture());
@@ -238,17 +290,22 @@ class LandingControllerTest {
                 "lastName",
                 userCaptor.getValue().getLastName());
 
-        // Verify that the persisted user is selected.
         ComboBox<?> comboBox = robot.lookup("#userComboBox")
                 .queryAs(ComboBox.class);
 
         robot.interact(() -> {
             assertEquals(1, comboBox.getItems().size());
-            assertSame(persistedUser, comboBox.getItems().get(0));
+
+            assertSame(
+                    persistedUser,
+                    comboBox.getItems().get(0));
+
             assertSame(
                     persistedUser,
                     comboBox.getSelectionModel().getSelectedItem());
         });
+
+        verifyNoInteractions(profileService);
     }
 
     @Test
@@ -256,7 +313,8 @@ class LandingControllerTest {
         loadLanding(List.of());
 
         when(userService.addUser(any(User.class)))
-                .thenThrow(new IllegalStateException("Database unavailable"));
+                .thenThrow(
+                        new IllegalStateException("Database unavailable"));
 
         robot.clickOn("Create User");
 
@@ -279,7 +337,6 @@ class LandingControllerTest {
                 "Unable to create user",
                 "An unexpected error occurred while saving the user");
 
-        // A failed save must not trigger a list refresh.
         verify(userService).getAllUsers();
 
         ComboBox<?> comboBox = robot.lookup("#userComboBox")
@@ -289,6 +346,8 @@ class LandingControllerTest {
             assertTrue(comboBox.getItems().isEmpty());
             assertTrue(comboBox.getSelectionModel().isEmpty());
         });
+
+        verifyNoInteractions(profileService);
     }
 
     @Test
@@ -305,7 +364,9 @@ class LandingControllerTest {
 
         robot.clickOn(cancelButton);
 
-        verify(userService, never()).addUser(any(User.class));
+        verify(userService, never())
+                .addUser(any(User.class));
+
         verify(userService).getAllUsers();
 
         ComboBox<?> comboBox = robot.lookup("#userComboBox")
@@ -315,5 +376,7 @@ class LandingControllerTest {
             assertTrue(comboBox.getItems().isEmpty());
             assertTrue(comboBox.getSelectionModel().isEmpty());
         });
+
+        verifyNoInteractions(profileService);
     }
 }

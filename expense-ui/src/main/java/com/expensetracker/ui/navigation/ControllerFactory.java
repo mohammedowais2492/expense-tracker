@@ -3,6 +3,7 @@ package com.expensetracker.ui.navigation;
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
+import com.expensetracker.ui.profile.ProfileService;
 import com.expensetracker.ui.screens.landing.LandingController;
 
 import javafx.util.Callback;
@@ -33,11 +34,14 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
     private final UserContext userContext;
     @NonNull
     private final AlertService alertService;
+    @NonNull
+    private final ProfileService profileService;
 
     @Override
     public Object call(Class<?> controllerClass) {
         if (controllerClass == LandingController.class) {
-            return new LandingController(applicationContext.getUserService(), userContext, alertService);
+            return new LandingController(applicationContext.getUserService(), userContext, alertService,
+                    profileService);
         }
         throw new IllegalArgumentException("Unsupported controller: " + controllerClass);
     }
