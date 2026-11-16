@@ -1,6 +1,7 @@
 package com.expensetracker.ui;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -10,12 +11,14 @@ import com.expensetracker.ui.bootstrap.ApplicationBootstrap;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.navigation.ControllerFactory;
+import com.expensetracker.ui.navigation.Screen;
 import com.expensetracker.ui.profile.ProfileService;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 /**
@@ -26,45 +29,66 @@ import javafx.stage.Stage;
  * application's primary window.
  */
 public final class ExpenseTrackerApplication extends Application {
-    @Override
-    public void start(Stage primaryStage) throws IOException {
-        Path databasePath = Path.of(
-                System.getProperty("user.home"),
-                "expense-tracker.db");
+        private Scene scene;
+        private ControllerFactory controllerFactory;
 
-        ApplicationContext applicationContext = ApplicationBootstrap.initialize(databasePath);
+        @Override
+        public void start(Stage primaryStage) throws IOException {
+                Path databasePath = Path.of(
+                                System.getProperty("user.home"),
+                                "expense-tracker.db");
 
-        UserContext userContext = new UserContext();
+                ApplicationContext applicationContext = ApplicationBootstrap.initialize(databasePath);
 
-        AlertService alertService = new JavaFxAlertService(primaryStage);
+                UserContext userContext = new UserContext();
 
-        ProfileService profileService = new ProfileService(applicationContext.getExpenseProfileService(), userContext);
+                AlertService alertService = new JavaFxAlertService(primaryStage);
 
-        FXMLLoader loader = new FXMLLoader(
-                getClass().getResource(
-                        "/com/expensetracker/ui/screens/landing.fxml"));
+                ProfileService profileService = new ProfileService(applicationContext.getExpenseProfileService(),
+                                userContext);
 
-        loader.setControllerFactory(
-                new ControllerFactory(applicationContext, userContext, alertService, profileService));
+                controllerFactory = new ControllerFactory(applicationContext, userContext, alertService,
+                                profileService, this::navigateTo);
 
-        Parent root = loader.load();
+                scene = new Scene(new StackPane(), 1000, 650);
 
-        Scene scene = new Scene(root, 1000, 650);
+                scene.getStylesheets().add(
+                                Objects.requireNonNull(
+                                                getClass().getResource(
+                                                                "/com/expensetracker/ui/styles/application.css"))
+                                                .toExternalForm());
 
-        scene.getStylesheets().add(
-                Objects.requireNonNull(
-                        getClass().getResource(
-                                "/com/expensetracker/ui/styles/application.css"))
-                        .toExternalForm());
+                primaryStage.setTitle("Expense Tracker");
+                primaryStage.setScene(scene);
+                primaryStage.setMinWidth(800);
+                primaryStage.setMinHeight(550);
 
-        primaryStage.setTitle("Expense Tracker");
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(800);
-        primaryStage.setMinHeight(550);
-        primaryStage.show();
-    }
+                navigateTo(Screen.LANDING);
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+                primaryStage.show();
+        }
+
+        private void navigateTo(Screen screen) {
+                Objects.requireNonNull(screen, "screen must not be null");
+                try {
+                        FXMLLoader loader = new FXMLLoader(
+                                        Objects.requireNonNull(
+                                                        getClass().getResource(screen.getResourcePath()),
+                                                        "FXML resource not found: " + screen));
+
+                        loader.setControllerFactory(controllerFactory);
+
+                        Parent root = loader.load();
+
+                        scene.setRoot(root);
+                } catch (IOException exception) {
+                        throw new UncheckedIOException(
+                                        "Unable to load screen: " + screen,
+                                        exception);
+                }
+        }
+
+        public static void main(String[] args) {
+                launch(args);
+        }
 }

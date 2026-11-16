@@ -1,5 +1,7 @@
 package com.expensetracker.ui.navigation;
 
+import java.util.function.Consumer;
+
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
@@ -36,12 +38,14 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
     private final AlertService alertService;
     @NonNull
     private final ProfileService profileService;
+    @NonNull
+    private final Consumer<Screen> navigation;
 
     @Override
     public Object call(Class<?> controllerClass) {
         if (controllerClass == LandingController.class) {
             return new LandingController(applicationContext.getUserService(), userContext, alertService,
-                    profileService);
+                    profileService, navigation);
         }
         throw new IllegalArgumentException("Unsupported controller: " + controllerClass);
     }

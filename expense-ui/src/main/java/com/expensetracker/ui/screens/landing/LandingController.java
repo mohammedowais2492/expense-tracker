@@ -2,12 +2,14 @@ package com.expensetracker.ui.screens.landing;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.expensetracker.models.User;
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.converters.UserStringConverter;
+import com.expensetracker.ui.navigation.Screen;
 import com.expensetracker.ui.profile.ProfileService;
 
 import javafx.fxml.FXML;
@@ -32,6 +34,7 @@ public final class LandingController {
     private final UserContext userContext;
     private final AlertService alertService;
     private final ProfileService profileService;
+    private final Consumer<Screen> navigation;
 
     @FXML
     private ComboBox<User> userComboBox;
@@ -47,13 +50,15 @@ public final class LandingController {
      * @param userContext    context holding the selected user
      * @param alertService   service used to present alerts
      * @param profileService service responsible for profile management
+     * @param navigation     callback used to request screen navigation
      */
     public LandingController(UserService userService, UserContext userContext, AlertService alertService,
-            ProfileService profileService) {
+            ProfileService profileService, Consumer<Screen> navigation) {
         this.userService = Objects.requireNonNull(userService, "userService must not be null");
         this.userContext = Objects.requireNonNull(userContext, "userContext must not be null");
         this.alertService = Objects.requireNonNull(alertService, "alertService must not be null");
         this.profileService = Objects.requireNonNull(profileService, "profileService must not be null");
+        this.navigation = Objects.requireNonNull(navigation, "navigation callback must not be null");
     }
 
     @FXML
@@ -83,14 +88,23 @@ public final class LandingController {
 
             profileService.selectDefaultProfile();
 
-            statusLabel.setText(
-                    "Profile selected successfully");
         } catch (RuntimeException exception) {
             exception.printStackTrace();
             alertService.showError(
                     "Profile Selection Failed",
                     "Unable to initialize expense profile",
                     "An unexpected error occurred while loading your profile.");
+            return;
+        }
+
+        try {
+            navigation.accept(Screen.DASHBOARD);
+        } catch (RuntimeException exception) {
+            exception.printStackTrace();
+            alertService.showError(
+                    "Navigation Failed",
+                    "Unable to open dashboard",
+                    "An unexpected error occurred while loading the dashboard.");
         }
     }
 

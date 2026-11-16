@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
+import java.util.function.Consumer;
+
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
@@ -29,12 +31,15 @@ class ControllerFactoryTest {
         UserContext userContext = new UserContext();
         AlertService alertService = mock(AlertService.class);
         ProfileService profileService = mock(ProfileService.class);
+        @SuppressWarnings("unchecked")
+        Consumer<Screen> navigation = mock(Consumer.class);
 
         factory = new ControllerFactory(
                 applicationContext,
                 userContext,
                 alertService,
-                profileService);
+                profileService,
+                navigation);
     }
 
     @Test
@@ -51,11 +56,15 @@ class ControllerFactoryTest {
 
         ProfileService profileService = mock(ProfileService.class);
 
+        @SuppressWarnings("unchecked")
+        Consumer<Screen> navigation = mock(Consumer.class);
+
         factory = new ControllerFactory(
                 applicationContext,
                 new UserContext(),
                 mock(AlertService.class),
-                profileService);
+                profileService,
+                navigation);
 
         Object controller = factory.call(LandingController.class);
 

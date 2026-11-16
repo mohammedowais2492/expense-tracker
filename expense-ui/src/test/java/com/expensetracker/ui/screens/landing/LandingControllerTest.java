@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ import com.expensetracker.models.User;
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.context.UserContext;
+import com.expensetracker.ui.navigation.Screen;
 import com.expensetracker.ui.profile.ProfileService;
 
 import javafx.fxml.FXMLLoader;
@@ -42,341 +44,388 @@ import javafx.stage.Stage;
 
 /**
  * Tests the landing screen's initialization, user selection,
- * user creation, and profile initialization workflow.
+ * user creation, profile initialization, and navigation workflow.
  *
  * <p>
- * Application services are mocked to isolate the controller's
- * behavior from persistence and profile resolution.
+ * Application services and the navigation callback are mocked
+ * to isolate the controller's behavior from persistence,
+ * profile resolution, and scene navigation.
  */
 @ExtendWith(ApplicationExtension.class)
 class LandingControllerTest {
 
-    private final UserService userService = mock(UserService.class);
-    private final AlertService alertService = mock(AlertService.class);
-    private final ProfileService profileService = mock(ProfileService.class);
-    private final UserContext userContext = new UserContext();
-
-    private Stage stage;
-
-    @Start
-    private void start(Stage stage) {
-        this.stage = stage;
-
-        stage.setScene(new Scene(new StackPane(), 1000, 650));
-        stage.show();
-    }
-
-    /**
-     * Loads the landing screen with the supplied users.
-     *
-     * @param users users returned by the mocked service
-     */
-    private void loadLanding(List<User> users) {
-        when(userService.getAllUsers()).thenReturn(users);
-
-        WaitForAsyncUtils.waitForAsyncFx(5000, () -> {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource(
-                            "/com/expensetracker/ui/screens/landing.fxml"));
-
-            loader.setControllerFactory(controllerClass -> {
-                if (controllerClass == LandingController.class) {
-                    return new LandingController(
-                            userService,
-                            userContext,
-                            alertService,
-                            profileService);
-                }
-
-                throw new IllegalArgumentException(
-                        "Unsupported controller: " + controllerClass);
-            });
-
-            try {
-                Parent root = loader.load();
-                stage.setScene(new Scene(root, 1000, 650));
-            } catch (IOException exception) {
-                throw new IllegalStateException(
-                        "Unable to load landing screen",
-                        exception);
-            }
-
-            return null;
-        });
-    }
-
-    @Test
-    void displaysEmptyStateWhenNoUsersExist(FxRobot robot) {
-        loadLanding(List.of());
-
-        Label statusLabel = robot.lookup("#statusLabel")
-                .queryAs(Label.class);
+        private final UserService userService = mock(UserService.class);
+        private final AlertService alertService = mock(AlertService.class);
+        private final ProfileService profileService = mock(ProfileService.class);
+        @SuppressWarnings("unchecked")
+        private final Consumer<Screen> navigation = mock(Consumer.class);
+        private final UserContext userContext = new UserContext();
+
+        private Stage stage;
+
+        @Start
+        private void start(Stage stage) {
+                this.stage = stage;
+
+                stage.setScene(new Scene(new StackPane(), 1000, 650));
+                stage.show();
+        }
+
+        /**
+         * Loads the landing screen with the supplied users.
+         *
+         * @param users users returned by the mocked service
+         */
+        private void loadLanding(List<User> users) {
+                when(userService.getAllUsers()).thenReturn(users);
+
+                WaitForAsyncUtils.waitForAsyncFx(5000, () -> {
+                        FXMLLoader loader = new FXMLLoader(
+                                        getClass().getResource(
+                                                        "/com/expensetracker/ui/screens/landing.fxml"));
+
+                        loader.setControllerFactory(controllerClass -> {
+                                if (controllerClass == LandingController.class) {
+                                        return new LandingController(
+                                                        userService,
+                                                        userContext,
+                                                        alertService,
+                                                        profileService,
+                                                        navigation);
+                                }
+
+                                throw new IllegalArgumentException(
+                                                "Unsupported controller: " + controllerClass);
+                        });
+
+                        try {
+                                Parent root = loader.load();
+                                stage.setScene(new Scene(root, 1000, 650));
+                        } catch (IOException exception) {
+                                throw new IllegalStateException(
+                                                "Unable to load landing screen",
+                                                exception);
+                        }
+
+                        return null;
+                });
+        }
+
+        @Test
+        void displaysEmptyStateWhenNoUsersExist(FxRobot robot) {
+                loadLanding(List.of());
+
+                Label statusLabel = robot.lookup("#statusLabel")
+                                .queryAs(Label.class);
+
+                assertEquals(
+                                "No users found. Create a user to get started.",
+                                statusLabel.getText());
+        }
+
+        @Test
+        void populatesUserComboBoxWhenUsersExist(FxRobot robot) {
+                User firstUser = User.builder()
+                                .firstName("firstName")
+                                .build();
+
+                User secondUser = User.builder()
+                                .firstName("secondName")
+                                .build();
+
+                loadLanding(List.of(firstUser, secondUser));
+
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
+
+                robot.interact(() -> {
+                        assertEquals(2, comboBox.getItems().size());
+                        assertEquals(firstUser, comboBox.getItems().get(0));
+                        assertEquals(secondUser, comboBox.getItems().get(1));
+                });
+        }
 
-        assertEquals(
-                "No users found. Create a user to get started.",
-                statusLabel.getText());
-    }
-
-    @Test
-    void populatesUserComboBoxWhenUsersExist(FxRobot robot) {
-        User firstUser = User.builder()
-                .firstName("firstName")
-                .build();
+        @Test
+        void disablesContinueButtonWhenNoUserIsSelected(FxRobot robot) {
+                User user = User.builder()
+                                .firstName("firstName")
+                                .build();
 
-        User secondUser = User.builder()
-                .firstName("secondName")
-                .build();
+                loadLanding(List.of(user));
 
-        loadLanding(List.of(firstUser, secondUser));
-
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-        robot.interact(() -> {
-            assertEquals(2, comboBox.getItems().size());
-            assertEquals(firstUser, comboBox.getItems().get(0));
-            assertEquals(secondUser, comboBox.getItems().get(1));
-        });
-    }
+                robot.interact(() -> assertTrue(continueButton.isDisabled()));
+        }
 
-    @Test
-    void disablesContinueButtonWhenNoUserIsSelected(FxRobot robot) {
-        User user = User.builder()
-                .firstName("firstName")
-                .build();
+        @Test
+        void enablesContinueButtonWhenUserIsSelected(FxRobot robot) {
+                User user = User.builder()
+                                .firstName("firstName")
+                                .build();
 
-        loadLanding(List.of(user));
+                loadLanding(List.of(user));
 
-        Button continueButton = robot.lookup("#continueButton")
-                .queryAs(Button.class);
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-        robot.interact(() -> assertTrue(continueButton.isDisabled()));
-    }
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-    @Test
-    void enablesContinueButtonWhenUserIsSelected(FxRobot robot) {
-        User user = User.builder()
-                .firstName("firstName")
-                .build();
+                robot.interact(() -> {
+                        comboBox.getSelectionModel().select(0);
+                        assertFalse(continueButton.isDisabled());
+                });
+        }
 
-        loadLanding(List.of(user));
+        @Test
+        void selectsUserInitializesProfileAndNavigatesWhenContinueIsClicked(
+                        FxRobot robot) {
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                User user = User.reconstitute(
+                                1L,
+                                "firstName",
+                                "lastName");
 
-        Button continueButton = robot.lookup("#continueButton")
-                .queryAs(Button.class);
+                loadLanding(List.of(user));
 
-        robot.interact(() -> {
-            comboBox.getSelectionModel().select(0);
-            assertFalse(continueButton.isDisabled());
-        });
-    }
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-    @Test
-    void selectsUserAndInitializesProfileWhenContinueIsClicked(
-            FxRobot robot) {
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-        User user = User.reconstitute(
-                1L,
-                "firstName",
-                "lastName");
+                robot.interact(() -> comboBox.getSelectionModel().select(0));
 
-        loadLanding(List.of(user));
+                robot.clickOn(continueButton);
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                assertEquals(1L, userContext.getCurrentUserId());
 
-        Button continueButton = robot.lookup("#continueButton")
-                .queryAs(Button.class);
+                verify(profileService).selectDefaultProfile();
+                verify(navigation).accept(Screen.DASHBOARD);
 
-        robot.interact(() -> comboBox.getSelectionModel().select(0));
+                verifyNoInteractions(alertService);
+        }
 
-        robot.clickOn(continueButton);
+        @Test
+        void doesNotInitializeProfileOrNavigateWhenNoUserIsSelected(
+                        FxRobot robot) {
 
-        assertEquals(1L, userContext.getCurrentUserId());
+                loadLanding(List.of());
 
-        verify(profileService).selectDefaultProfile();
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-        verifyNoInteractions(alertService);
-    }
+                robot.interact(() -> assertTrue(continueButton.isDisabled()));
 
-    @Test
-    void doesNotInitializeProfileWhenNoUserIsSelected(FxRobot robot) {
-        loadLanding(List.of());
+                verifyNoInteractions(profileService);
+                verifyNoInteractions(navigation);
+        }
 
-        Button continueButton = robot.lookup("#continueButton")
-                .queryAs(Button.class);
+        @Test
+        void displaysErrorWhenProfileInitializationFails(FxRobot robot) {
+                User user = User.reconstitute(
+                                1L,
+                                "firstName",
+                                "lastName");
 
-        robot.interact(() -> assertTrue(continueButton.isDisabled()));
+                loadLanding(List.of(user));
 
-        verifyNoInteractions(profileService);
-    }
+                doThrow(new IllegalStateException("Database unavailable"))
+                                .when(profileService)
+                                .selectDefaultProfile();
 
-    @Test
-    void displaysErrorWhenProfileInitializationFails(FxRobot robot) {
-        User user = User.reconstitute(
-                1L,
-                "firstName",
-                "lastName");
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-        loadLanding(List.of(user));
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-        doThrow(new IllegalStateException("Database unavailable"))
-                .when(profileService)
-                .selectDefaultProfile();
+                robot.interact(() -> comboBox.getSelectionModel().select(0));
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                robot.clickOn(continueButton);
 
-        Button continueButton = robot.lookup("#continueButton")
-                .queryAs(Button.class);
+                verify(profileService).selectDefaultProfile();
 
-        robot.interact(() -> comboBox.getSelectionModel().select(0));
+                verifyNoInteractions(navigation);
 
-        robot.clickOn(continueButton);
+                verify(alertService).showError(
+                                "Profile Selection Failed",
+                                "Unable to initialize expense profile",
+                                "An unexpected error occurred while loading your profile.");
+        }
 
-        verify(profileService).selectDefaultProfile();
+        @Test
+        void displaysErrorWhenDashboardNavigationFails(FxRobot robot) {
+                User user = User.reconstitute(
+                                1L,
+                                "firstName",
+                                "lastName");
 
-        verify(alertService).showError(
-                "Profile Selection Failed",
-                "Unable to initialize expense profile",
-                "An unexpected error occurred while loading your profile.");
-    }
+                loadLanding(List.of(user));
 
-    @Test
-    void createsUserAndSelectsPersistedUser(FxRobot robot) {
-        User persistedUser = mock(User.class);
+                doThrow(new IllegalStateException("Dashboard unavailable"))
+                                .when(navigation)
+                                .accept(Screen.DASHBOARD);
 
-        when(persistedUser.getId()).thenReturn(1L);
-        when(persistedUser.getFirstName()).thenReturn("firstName");
-        when(persistedUser.getLastName()).thenReturn("lastName");
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-        when(userService.addUser(any(User.class)))
-                .thenReturn(persistedUser);
+                Button continueButton = robot.lookup("#continueButton")
+                                .queryAs(Button.class);
 
-        loadLanding(List.of());
+                robot.interact(() -> comboBox.getSelectionModel().select(0));
 
-        // Configure the next retrieval, after the screen is initialized.
-        when(userService.getAllUsers())
-                .thenReturn(List.of(persistedUser));
+                robot.clickOn(continueButton);
 
-        robot.clickOn("Create User");
+                assertEquals(1L, userContext.getCurrentUserId());
 
-        robot.clickOn("#firstNameField").write("firstName");
-        robot.clickOn("#lastNameField").write("lastName");
+                verify(profileService).selectDefaultProfile();
+                verify(navigation).accept(Screen.DASHBOARD);
 
-        DialogPane dialogPane = robot.lookup(".dialog-pane")
-                .queryAs(DialogPane.class);
+                verify(alertService).showError(
+                                "Navigation Failed",
+                                "Unable to open dashboard",
+                                "An unexpected error occurred while loading the dashboard.");
+        }
 
-        Button createButton = (Button) dialogPane.getButtonTypes()
-                .stream()
-                .filter(type -> "Create User".equals(type.getText()))
-                .findFirst()
-                .map(dialogPane::lookupButton)
-                .orElseThrow();
+        @Test
+        void createsUserAndSelectsPersistedUser(FxRobot robot) {
+                User persistedUser = mock(User.class);
 
-        robot.clickOn(createButton);
+                when(persistedUser.getId()).thenReturn(1L);
+                when(persistedUser.getFirstName()).thenReturn("firstName");
+                when(persistedUser.getLastName()).thenReturn("lastName");
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+                when(userService.addUser(any(User.class)))
+                                .thenReturn(persistedUser);
 
-        verify(userService).addUser(userCaptor.capture());
+                loadLanding(List.of());
 
-        assertEquals(
-                "firstName",
-                userCaptor.getValue().getFirstName());
+                // Configure the next retrieval, after the screen is initialized.
+                when(userService.getAllUsers())
+                                .thenReturn(List.of(persistedUser));
 
-        assertEquals(
-                "lastName",
-                userCaptor.getValue().getLastName());
+                robot.clickOn("Create User");
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                robot.clickOn("#firstNameField").write("firstName");
+                robot.clickOn("#lastNameField").write("lastName");
 
-        robot.interact(() -> {
-            assertEquals(1, comboBox.getItems().size());
+                DialogPane dialogPane = robot.lookup(".dialog-pane")
+                                .queryAs(DialogPane.class);
 
-            assertSame(
-                    persistedUser,
-                    comboBox.getItems().get(0));
+                Button createButton = (Button) dialogPane.getButtonTypes()
+                                .stream()
+                                .filter(type -> "Create User".equals(type.getText()))
+                                .findFirst()
+                                .map(dialogPane::lookupButton)
+                                .orElseThrow();
 
-            assertSame(
-                    persistedUser,
-                    comboBox.getSelectionModel().getSelectedItem());
-        });
+                robot.clickOn(createButton);
 
-        verifyNoInteractions(profileService);
-    }
+                ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
-    @Test
-    void displaysErrorWhenUserCreationFails(FxRobot robot) {
-        loadLanding(List.of());
+                verify(userService).addUser(userCaptor.capture());
 
-        when(userService.addUser(any(User.class)))
-                .thenThrow(
-                        new IllegalStateException("Database unavailable"));
+                assertEquals(
+                                "firstName",
+                                userCaptor.getValue().getFirstName());
 
-        robot.clickOn("Create User");
+                assertEquals(
+                                "lastName",
+                                userCaptor.getValue().getLastName());
 
-        robot.clickOn("#firstNameField").write("firstName");
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-        DialogPane dialogPane = robot.lookup(".dialog-pane")
-                .queryAs(DialogPane.class);
+                robot.interact(() -> {
+                        assertEquals(1, comboBox.getItems().size());
 
-        Button createButton = (Button) dialogPane.getButtonTypes()
-                .stream()
-                .filter(type -> "Create User".equals(type.getText()))
-                .findFirst()
-                .map(dialogPane::lookupButton)
-                .orElseThrow();
+                        assertSame(
+                                        persistedUser,
+                                        comboBox.getItems().get(0));
 
-        robot.clickOn(createButton);
+                        assertSame(
+                                        persistedUser,
+                                        comboBox.getSelectionModel().getSelectedItem());
+                });
 
-        verify(alertService).showError(
-                "User Creation Failed",
-                "Unable to create user",
-                "An unexpected error occurred while saving the user");
+                verifyNoInteractions(profileService);
+                verifyNoInteractions(navigation);
+        }
 
-        verify(userService).getAllUsers();
+        @Test
+        void displaysErrorWhenUserCreationFails(FxRobot robot) {
+                loadLanding(List.of());
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                when(userService.addUser(any(User.class)))
+                                .thenThrow(
+                                                new IllegalStateException("Database unavailable"));
 
-        robot.interact(() -> {
-            assertTrue(comboBox.getItems().isEmpty());
-            assertTrue(comboBox.getSelectionModel().isEmpty());
-        });
+                robot.clickOn("Create User");
 
-        verifyNoInteractions(profileService);
-    }
+                robot.clickOn("#firstNameField").write("firstName");
 
-    @Test
-    void doesNotCreateUserWhenDialogIsCancelled(FxRobot robot) {
-        loadLanding(List.of());
+                DialogPane dialogPane = robot.lookup(".dialog-pane")
+                                .queryAs(DialogPane.class);
 
-        robot.clickOn("Create User");
+                Button createButton = (Button) dialogPane.getButtonTypes()
+                                .stream()
+                                .filter(type -> "Create User".equals(type.getText()))
+                                .findFirst()
+                                .map(dialogPane::lookupButton)
+                                .orElseThrow();
 
-        DialogPane dialogPane = robot.lookup(".dialog-pane")
-                .queryAs(DialogPane.class);
+                robot.clickOn(createButton);
 
-        Button cancelButton = (Button) dialogPane
-                .lookupButton(ButtonType.CANCEL);
+                verify(alertService).showError(
+                                "User Creation Failed",
+                                "Unable to create user",
+                                "An unexpected error occurred while saving the user");
 
-        robot.clickOn(cancelButton);
+                verify(userService).getAllUsers();
 
-        verify(userService, never())
-                .addUser(any(User.class));
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
 
-        verify(userService).getAllUsers();
+                robot.interact(() -> {
+                        assertTrue(comboBox.getItems().isEmpty());
+                        assertTrue(comboBox.getSelectionModel().isEmpty());
+                });
 
-        ComboBox<?> comboBox = robot.lookup("#userComboBox")
-                .queryAs(ComboBox.class);
+                verifyNoInteractions(profileService);
+                verifyNoInteractions(navigation);
+        }
 
-        robot.interact(() -> {
-            assertTrue(comboBox.getItems().isEmpty());
-            assertTrue(comboBox.getSelectionModel().isEmpty());
-        });
+        @Test
+        void doesNotCreateUserWhenDialogIsCancelled(FxRobot robot) {
+                loadLanding(List.of());
 
-        verifyNoInteractions(profileService);
-    }
+                robot.clickOn("Create User");
+
+                DialogPane dialogPane = robot.lookup(".dialog-pane")
+                                .queryAs(DialogPane.class);
+
+                Button cancelButton = (Button) dialogPane
+                                .lookupButton(ButtonType.CANCEL);
+
+                robot.clickOn(cancelButton);
+
+                verify(userService, never())
+                                .addUser(any(User.class));
+
+                verify(userService).getAllUsers();
+
+                ComboBox<?> comboBox = robot.lookup("#userComboBox")
+                                .queryAs(ComboBox.class);
+
+                robot.interact(() -> {
+                        assertTrue(comboBox.getItems().isEmpty());
+                        assertTrue(comboBox.getSelectionModel().isEmpty());
+                });
+
+                verifyNoInteractions(profileService);
+                verifyNoInteractions(navigation);
+        }
 }

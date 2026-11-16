@@ -28,3 +28,13 @@
 .dialog-pane .button-bar {
     -fx-background-color: -app-surface;
 }
+
+/* Dialog message */
+.dialog-pane .content.label {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 14px;
+}
+
+.dialog-pane .content {
+    -fx-text-fill: -app-muted;
+}

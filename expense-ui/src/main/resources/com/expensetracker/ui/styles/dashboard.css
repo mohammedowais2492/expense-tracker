@@ -1,0 +1,165 @@
+/*
+ * Dashboard and application shell styling.
+ *
+ * Uses the shared color palette defined in theme.css.
+ */
+
+/* Application shell */
+.app-shell {
+    -fx-background-color: -app-background;
+}
+
+/* Sidebar */
+.dashboard-sidebar {
+    -fx-background-color: -app-surface;
+    -fx-padding: 28px 16px;
+}
+
+.sidebar-brand {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 8px 24px 8px;
+}
+
+.sidebar-section-label {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 10px 4px 10px;
+}
+
+.sidebar-item-active {
+    -fx-background-color: -app-accent;
+    -fx-background-radius: 8px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-max-width: Infinity;
+    -fx-padding: 12px 14px;
+}
+
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -app-muted;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12px 14px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.sidebar-button:hover {
+    -fx-background-color: -app-border;
+    -fx-text-fill: -app-text;
+}
+
+/* Main dashboard */
+.dashboard-scroll,
+.dashboard-scroll>.viewport {
+    -fx-background-color: -app-background;
+}
+
+.dashboard-scroll {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.dashboard-content {
+    -fx-padding: 32px;
+}
+
+.dashboard-heading {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+.dashboard-subtitle {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 13px;
+}
+
+.dashboard-section-heading {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+/* Selected user and profile */
+.dashboard-profile {
+    -fx-background-color: -app-surface;
+    -fx-background-radius: 8px;
+    -fx-padding: 10px 16px;
+}
+
+.profile-user {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.profile-name {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 12px;
+}
+
+/* Expense summary cards */
+.expense-summary-card {
+    -fx-background-color: -app-surface;
+    -fx-background-radius: 12px;
+    -fx-padding: 22px 18px;
+    -fx-border-color: -app-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+}
+
+.summary-card-title {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.summary-card-value {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+/* Add Expense action */
+.dashboard-primary-button {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px 20px;
+    -fx-cursor: hand;
+}
+
+.dashboard-primary-button:hover {
+    -fx-opacity: 0.9;
+}
+
+/* Recent expenses */
+.recent-expenses-panel {
+    -fx-background-color: -app-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 24px;
+}
+
+.expenses-empty-state {
+    -fx-alignment: CENTER;
+}
+
+.empty-state-heading {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.empty-state-description {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 13px;
+}
