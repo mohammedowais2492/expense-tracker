@@ -5,6 +5,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.expensetracker.models.ExpenseProfile;
 import com.expensetracker.models.FinancialTransaction;
@@ -12,6 +13,7 @@ import com.expensetracker.models.User;
 import com.expensetracker.services.ExpenseProfileService;
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.context.UserContext;
+import com.expensetracker.ui.navigation.Dialog;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -33,6 +35,7 @@ public final class DashboardController {
     private final UserService userService;
     private final ExpenseProfileService expenseProfileService;
     private final DashboardService dashboardService;
+    private final Function<Dialog, Boolean> dialogHandler;
 
     @FXML
     private Label userLabel;
@@ -54,14 +57,17 @@ public final class DashboardController {
      * @param userService           service used to retrieve user information
      * @param expenseProfileService service used to retrieve expense profiles
      * @param dashboardService      service used to retrieve dashboard data
+     * @param dialogHandler         handler responsible for displaying dialogs
      */
     public DashboardController(UserContext userContext, UserService userService,
-            ExpenseProfileService expenseProfileService, DashboardService dashboardService) {
+            ExpenseProfileService expenseProfileService, DashboardService dashboardService,
+            Function<Dialog, Boolean> dialogHandler) {
         this.userContext = Objects.requireNonNull(userContext, "userContext must not be null");
         this.userService = Objects.requireNonNull(userService, "userService must not be null");
         this.expenseProfileService = Objects.requireNonNull(expenseProfileService,
                 "expenseProfileService must not be null");
         this.dashboardService = Objects.requireNonNull(dashboardService, "dashboardService must not be null");
+        this.dialogHandler = Objects.requireNonNull(dialogHandler, "dialogHandler must not be null");
     }
 
     @FXML
@@ -94,12 +100,7 @@ public final class DashboardController {
         userLabel.setText("User: " + user.getFirstName());
         profileLabel.setText("Profile: " + expenseProfile.getProfileName());
 
-        DashboardData dashboardData = dashboardService.getDashboardData();
-        thisMonthLabel.setText(formatCurrency(dashboardData.thisMonth()));
-        lastMonthLabel.setText(formatCurrency(dashboardData.lastMonth()));
-        thisYearLabel.setText(formatCurrency(dashboardData.thisYear()));
-
-        displayRecentExpenses(dashboardData.recentTransactions());
+        refreshDashboard();
     }
 
     private static String formatCurrency(long amountInCents) {
@@ -167,4 +168,22 @@ public final class DashboardController {
         return row;
     }
 
+    /**
+     * Opens the Add Expense dialog.
+     */
+    @FXML
+    private void handleAddExpense() {
+        if (dialogHandler.apply(Dialog.ADD_EXPENSE)) {
+            refreshDashboard();
+        }
+    }
+
+    private void refreshDashboard() {
+        DashboardData dashboardData = dashboardService.getDashboardData();
+        thisMonthLabel.setText(formatCurrency(dashboardData.thisMonth()));
+        lastMonthLabel.setText(formatCurrency(dashboardData.lastMonth()));
+        thisYearLabel.setText(formatCurrency(dashboardData.thisYear()));
+
+        displayRecentExpenses(dashboardData.recentTransactions());
+    }
 }

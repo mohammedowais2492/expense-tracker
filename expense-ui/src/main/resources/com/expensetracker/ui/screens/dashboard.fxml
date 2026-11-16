@@ -101,8 +101,8 @@
             </VBox>
 
             <Button text="+ Add Expense"
-                    disable="true"
-                    styleClass="dashboard-primary-button"/>
+                onAction="#handleAddExpense"
+                styleClass="dashboard-primary-button"/>
         </HBox>
 
         <!-- Recent expenses -->

@@ -38,3 +38,97 @@
 .dialog-pane .content {
     -fx-text-fill: -app-muted;
 }
+
+/* ============================================================
+   Add Expense Dialog
+   ============================================================ */
+
+.add-expense-dialog {
+    -fx-background-color: -app-background;
+    -fx-padding: 28;
+}
+
+.dialog-heading {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.dialog-subtitle {
+    -fx-text-fill: -app-muted;
+    -fx-font-size: 13px;
+}
+
+.dialog-field-label {
+    -fx-text-fill: -app-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* Input controls */
+
+.dialog-text-field,
+.dialog-combo-box,
+.dialog-date-picker,
+.dialog-text-area {
+    -fx-background-color: -app-surface;
+    -fx-text-fill: -app-text;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 13px;
+}
+
+.dialog-text-field,
+.dialog-combo-box,
+.dialog-date-picker {
+    -fx-pref-height: 38;
+}
+
+.dialog-text-field {
+    -fx-padding: 8 12;
+}
+
+.dialog-text-area {
+    -fx-pref-height: 80;
+}
+
+.dialog-text-area .content {
+    -fx-background-color: -app-surface;
+}
+
+/* Validation */
+
+.dialog-validation-message {
+    -fx-text-fill: #F87171;
+    -fx-font-size: 12px;
+}
+
+/* Actions */
+
+.dialog-primary-button {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-padding: 10 18;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.dialog-primary-button:hover {
+    -fx-opacity: 0.9;
+}
+
+.dialog-secondary-button {
+    -fx-background-color: -app-surface;
+    -fx-text-fill: -app-text;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 18;
+    -fx-cursor: hand;
+}
+
+.dialog-secondary-button:hover {
+    -fx-opacity: 0.85;
+}

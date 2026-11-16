@@ -1,6 +1,8 @@
 package com.expensetracker.ui.navigation;
 
+import java.time.Clock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
@@ -8,6 +10,8 @@ import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.profile.ProfileService;
 import com.expensetracker.ui.screens.dashboard.DashboardController;
 import com.expensetracker.ui.screens.dashboard.DashboardService;
+import com.expensetracker.ui.screens.expense.AddExpenseController;
+import com.expensetracker.ui.screens.expense.ExpenseService;
 import com.expensetracker.ui.screens.landing.LandingController;
 
 import javafx.util.Callback;
@@ -43,7 +47,13 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
     @NonNull
     private final DashboardService dashboardService;
     @NonNull
+    private final ExpenseService expenseService;
+    @NonNull
+    private final Clock clock;
+    @NonNull
     private final Consumer<Screen> navigation;
+    @NonNull
+    private final Function<Dialog, Boolean> dialogHandler;
 
     @Override
     public Object call(Class<?> controllerClass) {
@@ -53,7 +63,11 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
         }
         if (controllerClass == DashboardController.class) {
             return new DashboardController(userContext, applicationContext.getUserService(),
-                    applicationContext.getExpenseProfileService(), dashboardService);
+                    applicationContext.getExpenseProfileService(), dashboardService, dialogHandler);
+        }
+        if (controllerClass == AddExpenseController.class) {
+            return new AddExpenseController(clock, applicationContext.getCategoryService(), expenseService,
+                    alertService);
         }
         throw new IllegalArgumentException("Unsupported controller: " + controllerClass);
     }

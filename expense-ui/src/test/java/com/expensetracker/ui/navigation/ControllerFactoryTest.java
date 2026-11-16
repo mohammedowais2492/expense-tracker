@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
+import java.time.Clock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.expensetracker.services.UserService;
 import com.expensetracker.ui.alerts.AlertService;
@@ -13,6 +15,7 @@ import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.profile.ProfileService;
 import com.expensetracker.ui.screens.dashboard.DashboardService;
+import com.expensetracker.ui.screens.expense.ExpenseService;
 import com.expensetracker.ui.screens.landing.LandingController;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +36,11 @@ class ControllerFactoryTest {
         AlertService alertService = mock(AlertService.class);
         ProfileService profileService = mock(ProfileService.class);
         DashboardService dashboardService = mock(DashboardService.class);
+        ExpenseService expenseService = mock(ExpenseService.class);
         @SuppressWarnings("unchecked")
         Consumer<Screen> navigation = mock(Consumer.class);
+        @SuppressWarnings("unchecked")
+        Function<Dialog, Boolean> dialogHandler = mock(Function.class);
 
         factory = new ControllerFactory(
                 applicationContext,
@@ -42,7 +48,10 @@ class ControllerFactoryTest {
                 alertService,
                 profileService,
                 dashboardService,
-                navigation);
+                expenseService,
+                Clock.systemDefaultZone(),
+                navigation,
+                dialogHandler);
     }
 
     @Test
@@ -61,8 +70,13 @@ class ControllerFactoryTest {
 
         DashboardService dashboardService = mock(DashboardService.class);
 
+        ExpenseService expenseService = mock(ExpenseService.class);
+
         @SuppressWarnings("unchecked")
         Consumer<Screen> navigation = mock(Consumer.class);
+
+        @SuppressWarnings("unchecked")
+        Function<Dialog, Boolean> dialogHandler = mock(Function.class);
 
         factory = new ControllerFactory(
                 applicationContext,
@@ -70,7 +84,10 @@ class ControllerFactoryTest {
                 mock(AlertService.class),
                 profileService,
                 dashboardService,
-                navigation);
+                expenseService,
+                Clock.systemDefaultZone(),
+                navigation,
+                dialogHandler);
 
         Object controller = factory.call(LandingController.class);
 
