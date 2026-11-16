@@ -3,6 +3,7 @@ package com.expensetracker.ui;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.util.Objects;
 
 import com.expensetracker.ui.alerts.AlertService;
@@ -13,6 +14,7 @@ import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.navigation.ControllerFactory;
 import com.expensetracker.ui.navigation.Screen;
 import com.expensetracker.ui.profile.ProfileService;
+import com.expensetracker.ui.screens.dashboard.DashboardService;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -47,8 +49,11 @@ public final class ExpenseTrackerApplication extends Application {
                 ProfileService profileService = new ProfileService(applicationContext.getExpenseProfileService(),
                                 userContext);
 
+                DashboardService dashboardService = new DashboardService(userContext,
+                                applicationContext.getFinancialTransactionService(), Clock.systemDefaultZone());
+
                 controllerFactory = new ControllerFactory(applicationContext, userContext, alertService,
-                                profileService, this::navigateTo);
+                                profileService, dashboardService, this::navigateTo);
 
                 scene = new Scene(new StackPane(), 1000, 650);
 

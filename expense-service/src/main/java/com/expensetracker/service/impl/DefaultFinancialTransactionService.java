@@ -210,4 +210,17 @@ public class DefaultFinancialTransactionService implements FinancialTransactionS
                 .endDate(endDate)
                 .build();
     }
+
+    @Override
+    public long getTotalExpenses(long profileId, LocalDate startDate, LocalDate endDate) {
+        if (profileId <= 0) {
+            throw new IllegalArgumentException("profileId must be positive");
+        }
+        Objects.requireNonNull(startDate, "startDate must not be null");
+        Objects.requireNonNull(endDate, "endDate must not be null");
+        if (!endDate.isAfter(startDate)) {
+            throw new IllegalArgumentException("endDate must be after startDate");
+        }
+        return financialTransactionRepository.getTotalExpenses(profileId, startDate, endDate);
+    }
 }

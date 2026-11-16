@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.expensetracker.ui.screens.dashboard.DashboardController"
             fitToWidth="true"
             hbarPolicy="NEVER"
             styleClass="dashboard-scroll">
@@ -30,9 +31,11 @@
                   styleClass="dashboard-profile">
 
                 <Label text="User: —"
+                       fx:id="userLabel"
                        styleClass="profile-user"/>
 
                 <Label text="Profile: —"
+                       fx:id="profileLabel"
                        styleClass="profile-name"/>
             </VBox>
         </HBox>
@@ -53,7 +56,8 @@
                     <Label text="THIS MONTH"
                            styleClass="summary-card-title"/>
 
-                    <Label text="\$0.00"
+                    <Label fx:id="thisMonthLabel"
+                           text="\$0.00"
                            styleClass="summary-card-value"/>
                 </VBox>
 
@@ -65,7 +69,8 @@
                     <Label text="LAST MONTH"
                            styleClass="summary-card-title"/>
 
-                    <Label text="\$0.00"
+                    <Label fx:id="lastMonthLabel"
+                           text="\$0.00"
                            styleClass="summary-card-value"/>
                 </VBox>
 
@@ -77,7 +82,8 @@
                     <Label text="THIS YEAR"
                            styleClass="summary-card-title"/>
 
-                    <Label text="\$0.00"
+                    <Label fx:id="thisYearLabel"
+                           text="\$0.00"
                            styleClass="summary-card-value"/>
                 </VBox>
             </HBox>
@@ -106,16 +112,25 @@
             <Label text="Recent Expenses"
                    styleClass="dashboard-section-heading"/>
 
-            <VBox alignment="CENTER"
+            <!-- Populated dynamically by DashboardController -->
+            <VBox fx:id="recentExpensesContainer"
                   spacing="10"
+                  fillWidth="true"
                   minHeight="170"
-                  styleClass="expenses-empty-state">
+                  styleClass="recent-expenses-list">
 
-                <Label text="No expenses recorded yet"
-                       styleClass="empty-state-heading"/>
+                <!-- Initial empty state -->
+                <VBox alignment="CENTER"
+                      spacing="10"
+                      minHeight="170"
+                      styleClass="expenses-empty-state">
 
-                <Label text="Your latest expenses will appear here."
-                       styleClass="empty-state-description"/>
+                    <Label text="No expenses recorded yet"
+                           styleClass="empty-state-heading"/>
+
+                    <Label text="Your latest expenses will appear here."
+                           styleClass="empty-state-description"/>
+                </VBox>
             </VBox>
         </VBox>
 

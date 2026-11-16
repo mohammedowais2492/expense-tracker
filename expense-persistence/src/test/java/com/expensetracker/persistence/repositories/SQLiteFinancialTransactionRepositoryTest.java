@@ -2323,4 +2323,575 @@ class SQLiteFinancialTransactionRepositoryTest {
                         verify(jdbc.connection()).close();
                 }
         }
+
+        @Nested
+        @DisplayName("Tests for calculating total expenses")
+        class GetTotalExpensesTests {
+
+                private static final LocalDate START_DATE = LocalDate.of(2026, 11, 1);
+
+                private static final LocalDate END_DATE = LocalDate.of(2026, 12, 1);
+
+                private static final String TOTAL_EXPENSES_COLUMN = "TOTAL_EXPENSES";
+
+                private void insertExpense(
+                                TestFixture fixture,
+                                long profileId,
+                                long amount,
+                                LocalDate date) {
+
+                        fixture.repository().save(
+                                        FinancialTransaction.builder()
+                                                        .profileId(profileId)
+                                                        .categoryId(fixture.expenseCategoryId())
+                                                        .amount(amount)
+                                                        .type(TransactionType.EXPENSE)
+                                                        .transactionDate(date)
+                                                        .necessity(Necessity.NECESSARY)
+                                                        .build());
+                }
+
+                @ParameterizedTest
+                @ValueSource(longs = { 0L, -1L })
+                void throwsIllegalArgumentExceptionWhenProfileIdIsNotPositive(
+                                long profileId) {
+
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        assertThrows(
+                                        IllegalArgumentException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        profileId,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        verifyNoInteractions(connectionManager);
+                }
+
+                @Test
+                void throwsNullPointerExceptionWhenStartDateIsNull() {
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        assertThrows(
+                                        NullPointerException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        null,
+                                                        END_DATE));
+
+                        verifyNoInteractions(connectionManager);
+                }
+
+                @Test
+                void throwsNullPointerExceptionWhenEndDateIsNull() {
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        assertThrows(
+                                        NullPointerException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        null));
+
+                        verifyNoInteractions(connectionManager);
+                }
+
+                @Test
+                void throwsIllegalArgumentExceptionWhenDatesAreEqual() {
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        assertThrows(
+                                        IllegalArgumentException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        START_DATE));
+
+                        verifyNoInteractions(connectionManager);
+                }
+
+                @Test
+                void throwsIllegalArgumentExceptionWhenEndDatePrecedesStartDate() {
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        assertThrows(
+                                        IllegalArgumentException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        END_DATE,
+                                                        START_DATE));
+
+                        verifyNoInteractions(connectionManager);
+                }
+
+                @Test
+                void returnsZeroWhenNoExpensesExist() throws IOException {
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-empty.db");
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(0L, total);
+                }
+
+                @Test
+                void returnsZeroWhenNoExpensesMatchDateRange()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-outside-range.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1250L,
+                                        START_DATE.minusDays(1));
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        2500L,
+                                        END_DATE);
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(0L, total);
+                }
+
+                @Test
+                void successfullySumsExpensesWithinDateRange()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-multiple.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1250L,
+                                        START_DATE.plusDays(3));
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        2575L,
+                                        START_DATE.plusDays(10));
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        500L,
+                                        START_DATE.plusDays(20));
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(4325L, total);
+                }
+
+                @Test
+                void includesStartDateAndExcludesEndDate()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-date-boundaries.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        100L,
+                                        START_DATE.minusDays(1));
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        200L,
+                                        START_DATE);
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        300L,
+                                        END_DATE.minusDays(1));
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        400L,
+                                        END_DATE);
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(500L, total);
+                }
+
+                @Test
+                void excludesIncomeTransactionsFromTotal()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-excludes-income.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1250L,
+                                        TRANSACTION_DATE);
+
+                        fixture.repository().save(
+                                        createIncomeTransaction(
+                                                        fixture.profileId(),
+                                                        fixture.incomeCategoryId()));
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(1250L, total);
+                }
+
+                @Test
+                void includesOnlyExpensesBelongingToRequestedProfile()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-profile-isolation.db");
+
+                        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(
+                                        fixture.dataSource());
+
+                        User otherUser = new SQLiteUserRepository(
+                                        connectionManager).save(
+                                                        User.builder()
+                                                                        .firstName("otherFirstName")
+                                                                        .build());
+
+                        ExpenseProfile otherProfile = new SQLiteExpenseProfileRepository(
+                                        connectionManager).save(
+                                                        ExpenseProfile.builder()
+                                                                        .userId(otherUser.getId())
+                                                                        .profileName("Other Profile")
+                                                                        .build());
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1250L,
+                                        TRANSACTION_DATE);
+
+                        insertExpense(
+                                        fixture,
+                                        otherProfile.getId(),
+                                        5000L,
+                                        TRANSACTION_DATE);
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(1250L, total);
+                }
+
+                @Test
+                void returnsZeroWhenProfileDoesNotExist()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-missing-profile.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1250L,
+                                        TRANSACTION_DATE);
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        9999L,
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(0L, total);
+                }
+
+                @Test
+                void sumsAmountsExactlyAsIntegerCents()
+                                throws IOException {
+
+                        TestFixture fixture = createFixture(
+                                        "total-expenses-integer-cents.db");
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        10L,
+                                        TRANSACTION_DATE);
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        20L,
+                                        TRANSACTION_DATE);
+
+                        insertExpense(
+                                        fixture,
+                                        fixture.profileId(),
+                                        1L,
+                                        TRANSACTION_DATE);
+
+                        long total = fixture.repository().getTotalExpenses(
+                                        fixture.profileId(),
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(31L, total);
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenGetConnectionThrowsSQLException()
+                                throws SQLException {
+
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        SQLException expectedException = new SQLException("Connection failed");
+
+                        when(connectionManager.getConnection())
+                                        .thenThrow(expectedException);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertSame(expectedException, actualException.getCause());
+
+                        assertEquals(
+                                        "Unable to fetch total expenses",
+                                        actualException.getMessage());
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenPrepareStatementThrowsSQLException()
+                                throws SQLException {
+
+                        DatabaseConnectionManager connectionManager = mock(DatabaseConnectionManager.class);
+
+                        Connection connection = mock(Connection.class);
+
+                        SQLException expectedException = new SQLException("Statement preparation failed");
+
+                        when(connectionManager.getConnection())
+                                        .thenReturn(connection);
+
+                        when(connection.prepareStatement(anyString()))
+                                        .thenThrow(expectedException);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        connectionManager);
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertSame(expectedException, actualException.getCause());
+
+                        verify(connection).close();
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenExecuteQueryThrowsSQLException()
+                                throws SQLException {
+
+                        JdbcMocks jdbc = createJdbcMocks();
+
+                        SQLException expectedException = new SQLException("Query execution failed");
+
+                        when(jdbc.statement().executeQuery())
+                                        .thenThrow(expectedException);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        jdbc.connectionManager());
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertSame(expectedException, actualException.getCause());
+
+                        verify(jdbc.statement()).close();
+                        verify(jdbc.connection()).close();
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenResultSetNextThrowsSQLException()
+                                throws SQLException {
+
+                        JdbcMocks jdbc = createJdbcMocks();
+
+                        SQLException expectedException = new SQLException("Unable to advance result set");
+
+                        when(jdbc.resultSet().next())
+                                        .thenThrow(expectedException);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        jdbc.connectionManager());
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertSame(expectedException, actualException.getCause());
+
+                        verify(jdbc.resultSet()).close();
+                        verify(jdbc.statement()).close();
+                        verify(jdbc.connection()).close();
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenAggregateResultCannotBeRead()
+                                throws SQLException {
+
+                        JdbcMocks jdbc = createJdbcMocks();
+
+                        SQLException expectedException = new SQLException("Unable to read aggregate");
+
+                        when(jdbc.resultSet().next())
+                                        .thenReturn(true);
+
+                        when(jdbc.resultSet().getLong(TOTAL_EXPENSES_COLUMN))
+                                        .thenThrow(expectedException);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        jdbc.connectionManager());
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertSame(expectedException, actualException.getCause());
+
+                        verify(jdbc.resultSet()).close();
+                        verify(jdbc.statement()).close();
+                        verify(jdbc.connection()).close();
+                }
+
+                @Test
+                void throwsPersistenceExceptionWhenNoAggregateRowIsReturned()
+                                throws SQLException {
+
+                        JdbcMocks jdbc = createJdbcMocks();
+
+                        when(jdbc.resultSet().next())
+                                        .thenReturn(false);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        jdbc.connectionManager());
+
+                        PersistenceException actualException = assertThrows(
+                                        PersistenceException.class,
+                                        () -> repository.getTotalExpenses(
+                                                        1L,
+                                                        START_DATE,
+                                                        END_DATE));
+
+                        assertInstanceOf(
+                                        SQLException.class,
+                                        actualException.getCause());
+
+                        assertEquals(
+                                        "Unable to fetch total expenses",
+                                        actualException.getCause().getMessage());
+
+                        verify(jdbc.resultSet()).close();
+                        verify(jdbc.statement()).close();
+                        verify(jdbc.connection()).close();
+                }
+
+                @Test
+                void bindsParametersAndClosesJdbcResourcesWhenAggregationSucceeds()
+                                throws SQLException {
+
+                        JdbcMocks jdbc = createJdbcMocks();
+
+                        when(jdbc.resultSet().next())
+                                        .thenReturn(true);
+
+                        when(jdbc.resultSet().getLong(TOTAL_EXPENSES_COLUMN))
+                                        .thenReturn(4325L);
+
+                        SQLiteFinancialTransactionRepository repository = new SQLiteFinancialTransactionRepository(
+                                        jdbc.connectionManager());
+
+                        long total = repository.getTotalExpenses(
+                                        1L,
+                                        START_DATE,
+                                        END_DATE);
+
+                        assertEquals(4325L, total);
+
+                        verify(jdbc.statement()).setLong(1, 1L);
+
+                        verify(jdbc.statement()).setString(
+                                        2,
+                                        START_DATE.toString());
+
+                        verify(jdbc.statement()).setString(
+                                        3,
+                                        END_DATE.toString());
+
+                        verify(jdbc.statement()).setString(
+                                        4,
+                                        TransactionType.EXPENSE.name());
+
+                        verify(jdbc.statement()).executeQuery();
+
+                        verify(jdbc.resultSet()).close();
+                        verify(jdbc.statement()).close();
+                        verify(jdbc.connection()).close();
+                }
+        }
 }

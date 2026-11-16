@@ -78,6 +78,19 @@ public class SQLiteFinancialTransactionRepository implements FinancialTransactio
             DELETE FROM FinancialTransaction
             WHERE %s = ?
             """, TRANSACTION_ID_COLUMN);
+    private static final String GET_TOTAL_EXPENSES_SQL = String.format("""
+            SELECT COALESCE(SUM(%s), 0) AS TOTAL_EXPENSES
+            FROM FinancialTransaction
+            WHERE %s = ?
+              AND %s >= ?
+              AND %s < ?
+              AND %s = ?
+            """,
+            AMOUNT_COLUMN,
+            PROFILE_ID_COLUMN,
+            TRANSACTION_DATE_COLUMN,
+            TRANSACTION_DATE_COLUMN,
+            TYPE_COLUMN);
 
     private final DatabaseConnectionManager databaseConnectionManager;
 
@@ -257,6 +270,35 @@ public class SQLiteFinancialTransactionRepository implements FinancialTransactio
             return statement.executeUpdate() == 1;
         } catch (SQLException exception) {
             throw new PersistenceException("Unable to delete transaction", exception);
+        }
+    }
+
+    @Override
+    public long getTotalExpenses(long profileId, LocalDate startDate, LocalDate endDate) {
+        if (profileId <= 0) {
+            throw new IllegalArgumentException("profileId must be positive");
+        }
+        Objects.requireNonNull(startDate, "startDate must not be null");
+        Objects.requireNonNull(endDate, "endDate must not be null");
+
+        if (!endDate.isAfter(startDate)) {
+            throw new IllegalArgumentException("endDate must be after startDate");
+        }
+
+        try (Connection connection = databaseConnectionManager.getConnection();
+                PreparedStatement statement = connection.prepareStatement(GET_TOTAL_EXPENSES_SQL)) {
+            statement.setLong(1, profileId);
+            statement.setString(2, startDate.toString());
+            statement.setString(3, endDate.toString());
+            statement.setString(4, TransactionType.EXPENSE.name());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Unable to fetch total expenses");
+                }
+                return resultSet.getLong("TOTAL_EXPENSES");
+            }
+        } catch (SQLException exception) {
+            throw new PersistenceException("Unable to fetch total expenses", exception);
         }
     }
 

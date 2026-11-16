@@ -1,6 +1,7 @@
-
 package com.expensetracker.repositories;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import com.expensetracker.models.FinancialTransaction;
@@ -83,4 +84,34 @@ public interface FinancialTransactionRepository {
      * @throws IllegalArgumentException if the ID is not positive
      */
     boolean deleteById(long id);
+
+    /**
+     * Calculates the total expense amount for an expense profile
+     * within a specified date range.
+     *
+     * <p>
+     * The date range is start-inclusive and end-exclusive.
+     * Only transactions of type
+     * {@link com.expensetracker.models.TransactionType#EXPENSE}
+     * are included in the aggregation.
+     *
+     * <p>
+     * The aggregation is performed across all matching transactions,
+     * independently of pagination. Returns {@link BigDecimal#ZERO}
+     * when no matching transactions exist.
+     *
+     * @param profileId the ID of the expense profile; must be positive
+     * @param startDate the inclusive start date; must not be null
+     * @param endDate   the exclusive end date; must not be null
+     *                  and must be after startDate
+     * @return the total expense amount for the specified date range,
+     *         or zero if no matching expenses exist
+     * @throws IllegalArgumentException if profileId is not positive
+     *                                  or endDate is not after startDate
+     * @throws NullPointerException     if startDate or endDate is null
+     */
+    long getTotalExpenses(
+            long profileId,
+            LocalDate startDate,
+            LocalDate endDate);
 }

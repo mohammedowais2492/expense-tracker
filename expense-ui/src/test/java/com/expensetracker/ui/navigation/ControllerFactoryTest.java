@@ -12,6 +12,7 @@ import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.profile.ProfileService;
+import com.expensetracker.ui.screens.dashboard.DashboardService;
 import com.expensetracker.ui.screens.landing.LandingController;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ class ControllerFactoryTest {
         UserContext userContext = new UserContext();
         AlertService alertService = mock(AlertService.class);
         ProfileService profileService = mock(ProfileService.class);
+        DashboardService dashboardService = mock(DashboardService.class);
         @SuppressWarnings("unchecked")
         Consumer<Screen> navigation = mock(Consumer.class);
 
@@ -39,6 +41,7 @@ class ControllerFactoryTest {
                 userContext,
                 alertService,
                 profileService,
+                dashboardService,
                 navigation);
     }
 
@@ -56,6 +59,8 @@ class ControllerFactoryTest {
 
         ProfileService profileService = mock(ProfileService.class);
 
+        DashboardService dashboardService = mock(DashboardService.class);
+
         @SuppressWarnings("unchecked")
         Consumer<Screen> navigation = mock(Consumer.class);
 
@@ -64,6 +69,7 @@ class ControllerFactoryTest {
                 new UserContext(),
                 mock(AlertService.class),
                 profileService,
+                dashboardService,
                 navigation);
 
         Object controller = factory.call(LandingController.class);

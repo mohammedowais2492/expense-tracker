@@ -1,5 +1,7 @@
 package com.expensetracker.services;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Optional;
 
@@ -212,4 +214,33 @@ public interface FinancialTransactionService {
          * @throws IllegalArgumentException if transactionId is not positive
          */
         boolean deleteTransaction(long transactionId);
+
+        /**
+         * Calculates the total expense amount for an expense profile
+         * within a specified date range.
+         *
+         * <p>
+         * The date range is start-inclusive and end-exclusive.
+         * Only transactions of type {@link TransactionType#EXPENSE}
+         * are included in the calculation.
+         *
+         * <p>
+         * Returns {@link BigDecimal#ZERO} when no matching expenses
+         * exist. The total is calculated across all matching
+         * transactions, independently of pagination.
+         *
+         * @param profileId the ID of the expense profile; must be positive
+         * @param startDate the inclusive start date; must not be null
+         * @param endDate   the exclusive end date; must not be null
+         *                  and must be after startDate
+         * @return the total expense amount for the specified date range,
+         *         or zero if no matching expenses exist
+         * @throws IllegalArgumentException if profileId is not positive
+         *                                  or endDate is not after startDate
+         * @throws NullPointerException     if startDate or endDate is null
+         */
+        long getTotalExpenses(
+                        long profileId,
+                        LocalDate startDate,
+                        LocalDate endDate);
 }

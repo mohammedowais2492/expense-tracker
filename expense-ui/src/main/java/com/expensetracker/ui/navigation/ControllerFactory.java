@@ -6,6 +6,8 @@ import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.profile.ProfileService;
+import com.expensetracker.ui.screens.dashboard.DashboardController;
+import com.expensetracker.ui.screens.dashboard.DashboardService;
 import com.expensetracker.ui.screens.landing.LandingController;
 
 import javafx.util.Callback;
@@ -39,6 +41,8 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
     @NonNull
     private final ProfileService profileService;
     @NonNull
+    private final DashboardService dashboardService;
+    @NonNull
     private final Consumer<Screen> navigation;
 
     @Override
@@ -46,6 +50,10 @@ public final class ControllerFactory implements Callback<Class<?>, Object> {
         if (controllerClass == LandingController.class) {
             return new LandingController(applicationContext.getUserService(), userContext, alertService,
                     profileService, navigation);
+        }
+        if (controllerClass == DashboardController.class) {
+            return new DashboardController(userContext, applicationContext.getUserService(),
+                    applicationContext.getExpenseProfileService(), dashboardService);
         }
         throw new IllegalArgumentException("Unsupported controller: " + controllerClass);
     }
