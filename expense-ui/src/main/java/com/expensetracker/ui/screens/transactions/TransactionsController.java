@@ -13,7 +13,6 @@ import com.expensetracker.models.FinancialTransaction;
 import com.expensetracker.models.Necessity;
 import com.expensetracker.models.Page;
 import com.expensetracker.models.PageRequest;
-import com.expensetracker.models.PageRequest.PageRequestBuilder;
 import com.expensetracker.ui.categories.CategoryLookupService;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
