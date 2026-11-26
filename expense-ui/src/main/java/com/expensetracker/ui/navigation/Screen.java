@@ -15,7 +15,10 @@ public enum Screen {
     LANDING("/com/expensetracker/ui/screens/landing.fxml"),
 
     /** Main application dashboard. */
-    DASHBOARD("/com/expensetracker/ui/layout/app-shell.fxml");
+    DASHBOARD("/com/expensetracker/ui/screens/dashboard.fxml"),
+
+    /** Transaction history screen */
+    TRANSACTIONS("/com/expensetracker/ui/screens/transactions.fxml");
 
     /**
      * Classpath location of the screen's FXML resource.

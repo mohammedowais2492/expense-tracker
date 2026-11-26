@@ -2,7 +2,6 @@ package com.expensetracker.ui.screens.expense;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Objects;
 
 import com.expensetracker.models.Category;
 import com.expensetracker.models.FinancialTransaction;

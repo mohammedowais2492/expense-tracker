@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.expensetracker.ui.screens.transactions.TransactionsController"
+      spacing="24"
+      styleClass="transactions-content">
+
+    <!-- Heading -->
+    <VBox spacing="6">
+        <Label text="Transactions"
+               styleClass="dashboard-heading"/>
+
+        <Label text="Browse your recorded expenses."
+               styleClass="dashboard-subtitle"/>
+    </VBox>
+
+    <!-- Transaction table -->
+    <TableView fx:id="transactionsTable"
+               VBox.vgrow="ALWAYS"
+               styleClass="transactions-table">
+
+        <columns>
+            <TableColumn fx:id="dateColumn"
+                         text="Date"
+                         prefWidth="130"/>
+
+            <TableColumn fx:id="categoryColumn"
+                         text="Category"
+                         prefWidth="160"/>
+
+            <TableColumn fx:id="descriptionColumn"
+                         text="Description"
+                         prefWidth="280"/>
+
+            <TableColumn fx:id="necessityColumn"
+                         text="Necessity"
+                         prefWidth="140"/>
+
+            <TableColumn fx:id="amountColumn"
+                         text="Amount"
+                         prefWidth="140"
+                         styleClass="amount-column"/>
+        </columns>
+        <placeholder>
+              <Label text="No expenses recorded yet." styleClass="dashboard-subtitle"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Pagination -->
+    <HBox alignment="CENTER_RIGHT"
+          spacing="14"
+          styleClass="transactions-pagination">
+
+        <Button fx:id="previousButton"
+               text="Previous"
+               onAction="#handlePrevious"
+               disable="true"
+               styleClass="dialog-secondary-button"/>
+
+        <Label fx:id="pageLabel"
+               text="Page 1"
+               styleClass="dashboard-subtitle"/>
+
+        <Button fx:id="nextButton"
+               text="Next"
+               onAction="#handleNext"
+               disable="true"
+               styleClass="dialog-secondary-button"/>
+    </HBox>
+
+</VBox>

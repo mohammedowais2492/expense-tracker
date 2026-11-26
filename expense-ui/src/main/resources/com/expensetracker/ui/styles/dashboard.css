@@ -29,7 +29,7 @@
     -fx-padding: 0 10px 4px 10px;
 }
 
-.sidebar-item-active {
+.sidebar-button.sidebar-item-active {
     -fx-background-color: -app-accent;
     -fx-background-radius: 8px;
     -fx-text-fill: white;
@@ -50,6 +50,11 @@
 .sidebar-button:hover {
     -fx-background-color: -app-border;
     -fx-text-fill: -app-text;
+}
+
+.sidebar-button.sidebar-item-active:hover {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: white;
 }
 
 /* Main dashboard */

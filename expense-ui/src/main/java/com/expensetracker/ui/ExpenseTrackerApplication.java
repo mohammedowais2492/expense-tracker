@@ -10,19 +10,24 @@ import com.expensetracker.ui.alerts.AlertService;
 import com.expensetracker.ui.alerts.JavaFxAlertService;
 import com.expensetracker.ui.bootstrap.ApplicationBootstrap;
 import com.expensetracker.ui.bootstrap.ApplicationContext;
+import com.expensetracker.ui.bootstrap.UiServices;
+import com.expensetracker.ui.categories.CategoryLookupService;
 import com.expensetracker.ui.context.UserContext;
 import com.expensetracker.ui.navigation.ControllerFactory;
 import com.expensetracker.ui.navigation.Dialog;
 import com.expensetracker.ui.navigation.DialogResultProvider;
 import com.expensetracker.ui.navigation.Screen;
+import com.expensetracker.ui.navigation.SidebarController;
 import com.expensetracker.ui.profile.ProfileService;
 import com.expensetracker.ui.screens.dashboard.DashboardService;
 import com.expensetracker.ui.screens.expense.ExpenseService;
+import com.expensetracker.ui.screens.transactions.TransactionHistoryService;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -38,6 +43,7 @@ public final class ExpenseTrackerApplication extends Application {
         private Scene scene;
         private ControllerFactory controllerFactory;
         private Stage primaryStage;
+        private Screen activeScreen;
 
         @Override
         public void start(Stage primaryStage) throws IOException {
@@ -64,9 +70,30 @@ public final class ExpenseTrackerApplication extends Application {
                 ExpenseService expenseService = new ExpenseService(userContext,
                                 applicationContext.getFinancialTransactionService());
 
-                controllerFactory = new ControllerFactory(applicationContext, userContext, alertService,
-                                profileService, dashboardService, expenseService, clock, this::navigateTo,
-                                this::showDialog);
+                TransactionHistoryService transactionHistoryService = new TransactionHistoryService(userContext,
+                                applicationContext.getFinancialTransactionService());
+
+                CategoryLookupService categoryLookupService = new CategoryLookupService(
+                                applicationContext.getCategoryService());
+
+                categoryLookupService.refresh();
+
+                UiServices uiServices = new UiServices(
+                                applicationContext,
+                                userContext,
+                                alertService,
+                                profileService,
+                                dashboardService,
+                                expenseService,
+                                transactionHistoryService,
+                                categoryLookupService,
+                                clock);
+
+                controllerFactory = new ControllerFactory(
+                                uiServices,
+                                this::navigateTo,
+                                this::showDialog,
+                                this::getActiveScreen);
 
                 scene = new Scene(new StackPane(), 1000, 650);
 
@@ -88,17 +115,48 @@ public final class ExpenseTrackerApplication extends Application {
 
         private void navigateTo(Screen screen) {
                 Objects.requireNonNull(screen, "screen must not be null");
+
                 try {
-                        FXMLLoader loader = new FXMLLoader(
+                        FXMLLoader contentLoader = new FXMLLoader(
                                         Objects.requireNonNull(
                                                         getClass().getResource(screen.getResourcePath()),
                                                         "FXML resource not found: " + screen));
 
-                        loader.setControllerFactory(controllerFactory);
+                        contentLoader.setControllerFactory(controllerFactory);
 
-                        Parent root = loader.load();
+                        Parent content = contentLoader.load();
 
-                        scene.setRoot(root);
+                        if (screen == Screen.LANDING) {
+                                scene.setRoot(content);
+                                activeScreen = screen;
+                                return;
+                        }
+
+                        if (screen == Screen.DASHBOARD || screen == Screen.TRANSACTIONS) {
+                                FXMLLoader shellLoader = new FXMLLoader(
+                                                Objects.requireNonNull(
+                                                                getClass().getResource(
+                                                                                "/com/expensetracker/ui/layout/app-shell.fxml"),
+                                                                "Application shell FXML not found"));
+
+                                shellLoader.setControllerFactory(controllerFactory);
+
+                                BorderPane shell = shellLoader.load();
+                                shell.setCenter(content);
+
+                                SidebarController sidebarController = (SidebarController) shellLoader.getNamespace()
+                                                .get("sidebarController");
+
+                                scene.setRoot(shell);
+                                activeScreen = screen;
+
+                                sidebarController.refreshActiveScreen();
+                                return;
+                        }
+
+                        throw new IllegalArgumentException(
+                                        "Unsupported screen: " + screen);
+
                 } catch (IOException exception) {
                         throw new UncheckedIOException(
                                         "Unable to load screen: " + screen,
@@ -139,6 +197,10 @@ public final class ExpenseTrackerApplication extends Application {
                         throw new UncheckedIOException(
                                         "Unable to load dialog: " + dialog, exception);
                 }
+        }
+
+        private Screen getActiveScreen() {
+                return activeScreen;
         }
 
         public static void main(String[] args) {

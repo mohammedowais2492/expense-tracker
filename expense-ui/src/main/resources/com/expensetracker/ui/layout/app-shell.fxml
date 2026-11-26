@@ -6,11 +6,7 @@
             styleClass="app-shell">
 
     <left>
-        <fx:include source="sidebar.fxml"/>
+        <fx:include fx:id="sidebar" source="sidebar.fxml"/>
     </left>
-
-    <center>
-        <fx:include source="../screens/dashboard.fxml"/>
-    </center>
 
 </BorderPane>

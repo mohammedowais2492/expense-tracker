@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.expensetracker.ui.navigation.SidebarController"
       prefWidth="215"
       spacing="12"
       styleClass="dashboard-sidebar">
@@ -16,12 +17,16 @@
     <Label text="OVERVIEW"
            styleClass="sidebar-section-label"/>
 
-    <Label text="Dashboard"
-           styleClass="sidebar-item-active"/>
-
-    <Button text="Transactions"
+    <Button fx:id="dashboardButton"
+            text="Dashboard"
             maxWidth="Infinity"
-            disable="true"
+            onAction="#handleDashboard"
+            styleClass="sidebar-button"/>
+
+    <Button fx:id="transactionsButton"
+            text="Transactions"
+            maxWidth="Infinity"
+            onAction="#handleTransactions"
             styleClass="sidebar-button"/>
 
     <Button text="Reports"
