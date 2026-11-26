@@ -7,9 +7,11 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -18,6 +20,7 @@ import com.expensetracker.models.FinancialTransactionQuery;
 import com.expensetracker.models.Necessity;
 import com.expensetracker.models.Page;
 import com.expensetracker.models.PageRequest;
+import com.expensetracker.models.TransactionAggregate;
 import com.expensetracker.models.TransactionType;
 import com.expensetracker.persistence.DatabaseConnectionManager;
 import com.expensetracker.persistence.exceptions.PersistenceException;
@@ -366,5 +369,29 @@ public class SQLiteFinancialTransactionRepository implements FinancialTransactio
                 TRANSACTION_DATE_COLUMN,
                 TRANSACTION_ID_COLUMN));
         return queryBuilder.toString();
+    }
+
+    @Override
+    public Map<Long, TransactionAggregate> aggregateByCategory(FinancialTransactionQuery query) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'aggregateByCategory'");
+    }
+
+    @Override
+    public TransactionAggregate aggregate(FinancialTransactionQuery query) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'aggregate'");
+    }
+
+    @Override
+    public Map<Necessity, TransactionAggregate> aggregateByNecessity(FinancialTransactionQuery query) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'aggregateByNecessity'");
+    }
+
+    @Override
+    public Map<YearMonth, TransactionAggregate> aggregateByMonth(FinancialTransactionQuery query) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'aggregateByMonth'");
     }
 }
